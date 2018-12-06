@@ -1,0 +1,12 @@
+version: "2.1"
+
+services:
+  grafana_54:
+    image: grafana/grafana:5.4.0
+    ports:
+      - "3000:3000/tcp"
+
+  grafana_53:
+    image: grafana/grafana:5.3.4
+    ports:
+      - "3001:3000/tcp"

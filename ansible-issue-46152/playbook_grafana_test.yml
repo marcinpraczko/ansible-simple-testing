@@ -1,0 +1,60 @@
+---
+
+# Issue: https://github.com/ansible/ansible/issues/46152
+# PR   : https://github.com/ansible/ansible/pull/46525
+
+- name: "Test ansible and grafana"
+  hosts: localhost
+  become: False
+  gather_facts: False
+
+  vars:
+    grafana:
+      user: admin
+      pass: admin
+      urls:
+        - "http://localhost:3000"
+        - "http://localhost:3001"
+      dashboard_file: "{{ lookup('pipe', 'pwd') }}/dash_test.json"
+
+  tasks:
+    - debug:
+        var: "{{ item }}"
+      with_items:
+        - grafana.dashboard_file
+
+    - stat:
+        path: "{{ grafana.dashboard_file }}"
+      register: st
+
+    - name: "Test importing grafana dashboard (1/2) - initial import dashboard"
+      grafana_dashboard:
+        grafana_url: "{{ item }}"
+        grafana_user: "{{ grafana.user }}"
+        grafana_password: "{{ grafana.pass }}"
+        state: present
+        message: Updated by ansible
+        overwrite: yes
+        uid: "test01"
+        path: "{{ grafana.dashboard_file }}"
+      register: res01
+      loop: "{{ grafana.urls }}"
+
+    - debug:
+        var: res01
+
+    - name: "Test importing grafana dashboard (2/2) - reimport the same dashboard"
+      grafana_dashboard:
+        grafana_url: "{{ item }}"
+        grafana_user: "{{ grafana.user }}"
+        grafana_password: "{{ grafana.pass }}"
+        state: present
+        message: Updated by ansible
+        overwrite: yes
+        uid: "test01"
+        path: "{{ grafana.dashboard_file }}"
+        register: res02
+        loop: "{{ grafana.urls }}"
+
+    - debug:
+        var: res02
